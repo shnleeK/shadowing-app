@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablo 팟캐스트 섀도잉</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Shadowing Practice</h1>
+            <div class="input-group">
+                <input type="text" id="youtubeUrl" placeholder="유튜브 영상 주소를 입력하세요 (예: https://www.youtube.com/watch?v=...)">
+                <button id="loadBtn">불러오기</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="player-section">
+                <div id="player"></div>
+                <div class="controls">
+                    <button id="prevBtn">이전 문장</button>
+                    <button id="repeatBtn">현재 문장 반복 (A-B)</button>
+                    <button id="nextBtn">다음 문장</button>
+                </div>
+            </div>
+
+            <div class="caption-section">
+                <div id="captionList" class="caption-list">
+                    <p class="placeholder">영상을 불러오면 자막이 여기에 표시됩니다.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="script.js"></script>
+</body>
+</html>
