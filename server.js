@@ -1,6 +1,14 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import YoutubeTranscriptPkg from 'youtube-transcript';
+
+// ESM과 CommonJS 라이브러리 간의 호환성 확보
+const YoutubeTranscript = YoutubeTranscriptPkg.default || YoutubeTranscriptPkg;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,7 +17,6 @@ app.use(cors());
 const clientPath = path.join(__dirname, 'client');
 app.use(express.static(clientPath));
 
-// 자막 추출 API (다이나믹 임포트 사용)
 app.get('/api/captions', async (req, res) => {
   const videoId = req.query.v;
   if (!videoId) return res.status(400).json({ error: 'Video ID is required' });
@@ -17,17 +24,15 @@ app.get('/api/captions', async (req, res) => {
   console.log(`Fetching captions for video: ${videoId}`);
 
   try {
-    // ESM 모듈을 실행 시점에 다이나믹하게 불러옵니다.
-    const { YoutubeTranscript } = await import('youtube-transcript');
-
     let transcripts;
+    // 가능한 언어 순서대로 시도
     const langs = ['en', 'en-US', 'ko'];
     let success = false;
 
     for (const lang of langs) {
       try {
         transcripts = await YoutubeTranscript.fetchTranscript(videoId, { lang });
-        if (transcripts) {
+        if (transcripts && transcripts.length > 0) {
           success = true;
           break;
         }
@@ -37,9 +42,11 @@ app.get('/api/captions', async (req, res) => {
     }
 
     if (!success) {
+      // 언어 지정 없이 마지막 시도
       transcripts = await YoutubeTranscript.fetchTranscript(videoId);
     }
     
+    // 데이터를 script.js가 원하는 포맷으로 변환
     const captions = transcripts.map(t => ({
       text: t.text,
       dur: (t.duration / 1000).toString(),

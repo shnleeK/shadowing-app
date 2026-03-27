@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "description": "YouTube Shadowing Player",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
-    "node": "18.x"
+    "node": ">=18"
   },
   "keywords": [],
   "author": "shnleeK",
