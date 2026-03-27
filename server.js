@@ -1,8 +1,12 @@
 import express from 'express';
-import YoutubeTranscript from 'youtube-transcript';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+
+// CommonJS 라이브러리를 안전하게 불러오기 위한 설정
+const require = createRequire(import.meta.url);
+const { YoutubeTranscript } = require('youtube-transcript');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
