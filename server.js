@@ -7,51 +7,55 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-
-// 프론트엔드 파일들이 들어갈 폴더 설정
 const clientPath = path.join(__dirname, 'client');
 app.use(express.static(clientPath));
 
-// 자막 추출 API (더 안정적인 youtube-transcript 사용)
 app.get('/api/captions', async (req, res) => {
   const videoId = req.query.v;
-  
-  if (!videoId) {
-    return res.status(400).json({ error: 'Video ID is required' });
-  }
+  if (!videoId) return res.status(400).json({ error: 'Video ID is required' });
 
   console.log(`Fetching captions for video: ${videoId}`);
 
   try {
-    // 1. 영어 자막 시도
+    // 여러 언어 시도 (en, en-US, ko 순서)
     let transcripts;
-    try {
-      transcripts = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
-    } catch (e) {
-      console.log('English captions not found, trying without lang spec...');
-      // 2. 다른 언어나 자동 생성 자막 시도
+    const langs = ['en', 'en-US', 'ko'];
+    let success = false;
+
+    for (const lang of langs) {
+      try {
+        transcripts = await YoutubeTranscript.fetchTranscript(videoId, { lang });
+        if (transcripts) {
+          success = true;
+          break;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+
+    if (!success) {
+      // 마지막으로 언어 지정 없이 시도
       transcripts = await YoutubeTranscript.fetchTranscript(videoId);
     }
     
-    // 이 라이브러리는 { text, duration, offset } 형식을 돌려줍니다. 
-    // 기존 script.js와 호환되게 { text, dur, start } 형식으로 변환합니다.
     const captions = transcripts.map(t => ({
       text: t.text,
-      dur: (t.duration / 1000).toString(), // ms -> s
-      start: (t.offset / 1000).toString()   // ms -> s
+      dur: (t.duration / 1000).toString(),
+      start: (t.offset / 1000).toString()
     }));
 
     res.json(captions);
   } catch (error) {
-    console.error('Error in /api/captions:', error);
+    console.error('Error fetching captions:', error);
+    // 에러 메시지를 더 구체적으로 보냄
     res.status(500).json({ 
-      error: '자막을 가져오지 못했습니다.',
-      message: error.message || '이 영상에는 자막이 없는 것 같습니다.' 
+      error: '자막 로드 실패',
+      message: error.message || '이 영상은 자막 데이터를 제공하지 않거나 서버가 차단되었습니다.'
     });
   }
 });
 
-// 메인 페이지 서빙
 app.get('/', (req, res) => {
   res.sendFile(path.join(clientPath, 'index.html'));
 });

@@ -115,7 +115,9 @@ document.getElementById('loadBtn').onclick = async () => {
         const data = await response.json();
         
         if (data.error) {
-            alert(data.error);
+            alert(`${data.error}: ${data.message || '자막이 없거나 서버에서 차단되었습니다.'}`);
+            captions = [];
+            renderCaptions();
         } else {
             captions = data;
             currentIndex = -1;
@@ -123,6 +125,8 @@ document.getElementById('loadBtn').onclick = async () => {
         }
     } catch (err) {
         alert('서버와 통신 중 오류가 발생했습니다.');
+        captions = [];
+        renderCaptions();
     } finally {
         loadBtn.innerText = '불러오기';
         loadBtn.disabled = false;
