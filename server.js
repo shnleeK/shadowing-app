@@ -1,15 +1,7 @@
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
-
-// CommonJS 라이브러리를 안전하게 불러오기 위한 설정
-const require = createRequire(import.meta.url);
+const express = require('express');
 const { YoutubeTranscript } = require('youtube-transcript');
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
