@@ -1,5 +1,4 @@
 const express = require('express');
-const { YoutubeTranscript } = require('youtube-transcript');
 const cors = require('cors');
 const path = require('path');
 
@@ -10,6 +9,7 @@ app.use(cors());
 const clientPath = path.join(__dirname, 'client');
 app.use(express.static(clientPath));
 
+// 자막 추출 API (다이나믹 임포트 사용)
 app.get('/api/captions', async (req, res) => {
   const videoId = req.query.v;
   if (!videoId) return res.status(400).json({ error: 'Video ID is required' });
@@ -17,6 +17,9 @@ app.get('/api/captions', async (req, res) => {
   console.log(`Fetching captions for video: ${videoId}`);
 
   try {
+    // ESM 모듈을 실행 시점에 다이나믹하게 불러옵니다.
+    const { YoutubeTranscript } = await import('youtube-transcript');
+
     let transcripts;
     const langs = ['en', 'en-US', 'ko'];
     let success = false;
