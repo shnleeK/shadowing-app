@@ -1,7 +1,11 @@
-const express = require('express');
-const { YoutubeTranscript } = require('youtube-transcript');
-const cors = require('cors');
-const path = require('path');
+import express from 'express';
+import { YoutubeTranscript } from 'youtube-transcript';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,7 +21,6 @@ app.get('/api/captions', async (req, res) => {
   console.log(`Fetching captions for video: ${videoId}`);
 
   try {
-    // 여러 언어 시도 (en, en-US, ko 순서)
     let transcripts;
     const langs = ['en', 'en-US', 'ko'];
     let success = false;
@@ -35,7 +38,6 @@ app.get('/api/captions', async (req, res) => {
     }
 
     if (!success) {
-      // 마지막으로 언어 지정 없이 시도
       transcripts = await YoutubeTranscript.fetchTranscript(videoId);
     }
     
@@ -48,7 +50,6 @@ app.get('/api/captions', async (req, res) => {
     res.json(captions);
   } catch (error) {
     console.error('Error fetching captions:', error);
-    // 에러 메시지를 더 구체적으로 보냄
     res.status(500).json({ 
       error: '자막 로드 실패',
       message: error.message || '이 영상은 자막 데이터를 제공하지 않거나 서버가 차단되었습니다.'
