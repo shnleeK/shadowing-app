@@ -1,14 +1,7 @@
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import YoutubeTranscriptPkg from 'youtube-transcript';
-
-// ESM과 CommonJS 라이브러리 간의 호환성 확보
-const YoutubeTranscript = YoutubeTranscriptPkg.default || YoutubeTranscriptPkg;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const { getSubtitles } = require('youtube-captions-scraper');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,44 +14,26 @@ app.get('/api/captions', async (req, res) => {
   const videoId = req.query.v;
   if (!videoId) return res.status(400).json({ error: 'Video ID is required' });
 
-  console.log(`Fetching captions for video: ${videoId}`);
+  console.log(`Fetching captions for: ${videoId}`);
 
   try {
-    let transcripts;
-    // 가능한 언어 순서대로 시도
-    const langs = ['en', 'en-US', 'ko'];
-    let success = false;
-
-    for (const lang of langs) {
-      try {
-        transcripts = await YoutubeTranscript.fetchTranscript(videoId, { lang });
-        if (transcripts && transcripts.length > 0) {
-          success = true;
-          break;
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-
-    if (!success) {
-      // 언어 지정 없이 마지막 시도
-      transcripts = await YoutubeTranscript.fetchTranscript(videoId);
+    // 1. 영어 자막 시도
+    let captions;
+    try {
+      captions = await getSubtitles({ videoID: videoId, lang: 'en' });
+    } catch (e) {
+      console.log('Falling back to default language...');
+      // 2. 다른 언어나 자동 생성 자막 시도
+      captions = await getSubtitles({ videoID: videoId });
     }
     
-    // 데이터를 script.js가 원하는 포맷으로 변환
-    const captions = transcripts.map(t => ({
-      text: t.text,
-      dur: (t.duration / 1000).toString(),
-      start: (t.offset / 1000).toString()
-    }));
-
+    // 이 라이브러리는 이미 { text, dur, start } 형식을 사용하므로 그대로 전달
     res.json(captions);
   } catch (error) {
-    console.error('Error fetching captions:', error);
+    console.error('Final Error fetching captions:', error);
     res.status(500).json({ 
-      error: '자막 로드 실패',
-      message: error.message || '이 영상은 자막 데이터를 제공하지 않거나 서버가 차단되었습니다.'
+      error: '자막 추출 불가능',
+      message: '유튜브 차단으로 자동 추출이 막혔습니다. "수동 자막 입력" 기능을 사용해 보세요.' 
     });
   }
 });
@@ -68,5 +43,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server started on port ${PORT}`);
+  console.log(`Shadowing Server running on port ${PORT}`);
 });
